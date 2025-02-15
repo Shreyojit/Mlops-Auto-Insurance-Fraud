@@ -1,0 +1,22 @@
+ipykernel
+pandas
+numpy
+matplotlib
+plotly
+seaborn
+scikit-learn
+pymongo
+from_root
+dill
+certifi
+PyYAML
+google-cloud-storage>=2.0.0  # Replaces boto3 for GCP Storage
+fastapi
+python-multipart
+uvicorn
+jinja2
+imblearn
+dvc[gcp]  # DVC with GCP integration
+mlflow
+google-cloud-logging  # For GCP logging
+
