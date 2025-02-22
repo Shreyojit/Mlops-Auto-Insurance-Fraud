@@ -1,0 +1,34 @@
+PROJECT_ID="churn-cloud-project-446615"
+SERVICE_ACCOUNT="cicd-sa@churn-cloud-project-446615.iam.gserviceaccount.com"
+
+# Compute Engine Permissions
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SERVICE_ACCOUNT" \
+  --role="roles/compute.networkAdmin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SERVICE_ACCOUNT" \
+  --role="roles/compute.securityAdmin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SERVICE_ACCOUNT" \
+  --role="roles/compute.instanceAdmin.v1"
+
+# Cloud Run Permissions
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SERVICE_ACCOUNT" \
+  --role="roles/run.admin"
+
+# IAM & Logging Permissions
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SERVICE_ACCOUNT" \
+  --role="roles/resourcemanager.projectIamAdmin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SERVICE_ACCOUNT" \
+  --role="roles/logging.admin"
+
+# Optional: Storage Permissions (if using GCS for Terraform state)
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$SERVICE_ACCOUNT" \
+  --role="roles/storage.admin"

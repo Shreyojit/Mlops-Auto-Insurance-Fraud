@@ -7,6 +7,26 @@ WORKDIR /app
 # Copy the service account key file to the container
 COPY keyfile.json /app/keyfile.json
 
+
+# Define build arguments for sensitive information
+ARG DB_PASSWORD
+ARG DB_USERNAME
+ARG MONGODB_URL
+ARG MLFLOW_TRACKING_URI
+ARG MLFLOW_TRACKING_USERNAME
+ARG MLFLOW_TRACKING_PASSWORD
+
+# Set environment variables using build arguments
+ENV DB_PASSWORD=$DB_PASSWORD
+ENV DB_USERNAME=$DB_USERNAME
+ENV MONGODB_URL=$MONGODB_URL
+ENV MLFLOW_TRACKING_URI=$MLFLOW_TRACKING_URI
+ENV MLFLOW_TRACKING_USERNAME=$MLFLOW_TRACKING_USERNAME
+ENV MLFLOW_TRACKING_PASSWORD=$MLFLOW_TRACKING_PASSWORD
+
+
+
+
 # Set environment variable for Google Cloud SDK authentication
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
 
