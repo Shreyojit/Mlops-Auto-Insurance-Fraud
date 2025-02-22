@@ -1,3 +1,5 @@
+deploy.yaml->GCP
+
 name: Deploy to GCP
 
 on:
@@ -9,7 +11,12 @@ on:
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: asia-south1
-  SERVICE_ACCOUNT_EMAIL: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  DB_USERNAME: ${{ secrets.DB_USERNAME }}
+  MONGODB_URL: ${{ secrets.MONGODB_URL }}
+  MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+  MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+  MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
 
 jobs:
   build-docker:
@@ -52,6 +59,13 @@ jobs:
           gcr.io/${{ env.PROJECT_ID }}/vehicle-insurance-app:${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        build-args: |
+          DB_PASSWORD=${{ env.DB_PASSWORD }}
+          DB_USERNAME=${{ env.DB_USERNAME }}
+          MONGODB_URL=${{ env.MONGODB_URL }}
+          MLFLOW_TRACKING_URI=${{ env.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME=${{ env.MLFLOW_TRACKING_USERNAME }}
+          MLFLOW_TRACKING_PASSWORD=${{ env.MLFLOW_TRACKING_PASSWORD }}
 
   deploy-infra:
     name: Deploy Infrastructure
@@ -88,16 +102,16 @@ jobs:
       working-directory: ./infrastructure
 
     - name: Terraform Plan
-      run: terraform plan -var="project_id=$PROJECT_ID" -var="region=$REGION" -var="credentials_file=credentials.json" -var="service_account_email=$SERVICE_ACCOUNT_EMAIL" -var="db_password=${{ secrets.DB_PASSWORD }}" -var="mongodb_url=${{ secrets.MONGODB_URL }}"
+      run: terraform plan -var="project_id=$PROJECT_ID" -var="region=$REGION" -var="credentials_file=credentials.json"
       if: github.event_name == 'pull_request'
       working-directory: ./infrastructure
 
     - name: Terraform Apply
-      run: terraform apply -auto-approve -var="project_id=$PROJECT_ID" -var="region=$REGION" -var="credentials_file=credentials.json" -var="service_account_email=$SERVICE_ACCOUNT_EMAIL" -var="db_password=${{ secrets.DB_PASSWORD }}" -var="mongodb_url=${{ secrets.MONGODB_URL }}"
+      run: terraform apply -auto-approve -var="project_id=$PROJECT_ID" -var="region=$REGION" -var="credentials_file=credentials.json"
       if: github.ref == 'refs/heads/main'
       working-directory: ./infrastructure
 
-    - name: Verify Deployment
+    - name: Verify Deployment'
       working-directory: ./infrastructure
       run: |
         echo "Load Balancer IP: $(terraform output -raw load_balancer_ip)"
