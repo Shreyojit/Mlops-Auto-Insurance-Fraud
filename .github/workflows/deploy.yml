@@ -109,7 +109,8 @@ jobs:
       if: github.ref == 'refs/heads/main'
       working-directory: ./infrastructure
 
-    - name: Verify Deployment
+    - name: Verify Deployment'
+      working-directory: ./infrastructure
       run: |
         echo "Load Balancer IP: $(terraform output -raw load_balancer_ip)"
         echo "Cloud Run URL: $(terraform output -raw cloud_run_url)"
