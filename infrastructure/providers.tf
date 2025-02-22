@@ -1,4 +1,10 @@
 terraform {
+  backend "gcs" {
+    bucket      = "churn-cloud-project-446615-tfstate"
+    prefix      = "terraform/state"
+    credentials = "credentials.json"
+  }
+
   required_providers {
     google = {
       source  = "hashicorp/google"
@@ -8,10 +14,11 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.5"
     }
-    time = {
-      source  = "hashicorp/time"
-      version = "~> 0.10.0"
-    }
   }
 }
 
+provider "google" {
+  project     = var.project_id
+  region      = var.region
+  credentials = file(var.credentials_file)
+}

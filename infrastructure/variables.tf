@@ -1,4 +1,3 @@
-# variables.tf
 variable "project_id" {
   description = "GCP Project ID"
   type        = string
@@ -11,7 +10,7 @@ variable "region" {
 }
 
 variable "credentials_file" {
-  description = "Path to GCP Service Account Credentials JSON file"
+  description = "../credentials.json"
   type        = string
 }
 
@@ -20,3 +19,14 @@ variable "service_account_email" {
   type        = string
 }
 
+variable "db_password" {
+  description = "Database password"
+  type        = string
+  sensitive   = true
+}
+
+variable "mongodb_url" {
+  description = "MongoDB connection URL"
+  type        = string
+  sensitive   = true
+}
