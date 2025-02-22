@@ -5,7 +5,7 @@ FROM python:3.10-slim-buster
 WORKDIR /app
 
 # Copy the service account key file to the container
-COPY keyfile.json /app/keyfile.json
+COPY credentials.json /app/credentials.json
 
 # Set environment variable for Google Cloud SDK authentication
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json
