@@ -8,10 +8,10 @@ WORKDIR /app
 COPY keyfile.json /app/keyfile.json
 
 # Set environment variable for Google Cloud SDK authentication
-ENV GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json
 
 # Ensure the correct permissions for the key file
-RUN chmod 644 /app/keyfile.json
+RUN chmod 644 /app/credentials.json
 
 # Copy the application code to the container
 COPY . /app
