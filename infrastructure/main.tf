@@ -50,18 +50,7 @@ resource "google_cloud_run_service" "container_service" {
           container_port = 5000
         }
 
-        resources {
-          limits = {
-            cpu    = "1000m"  # 1 vCPU
-            memory = "512Mi"  # 512MB RAM
-          }
-        }
-      }
-
-      # Auto-scaling limits
-      scaling {
-        min_instance_count = 1  # At least 1 instance always running
-        max_instance_count = 10 # Scale up to 10 instances max
+        
       }
     }
   }
