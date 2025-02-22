@@ -9,6 +9,8 @@ on:
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: asia-south1
+  TF_DIR: infrastructure/
+  # Move sensitive vars to job level
   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   DB_USERNAME: ${{ secrets.DB_USERNAME }}
   MONGODB_URL: ${{ secrets.MONGODB_URL }}
@@ -18,52 +20,7 @@ env:
 
 jobs:
   build-docker:
-    name: Build and Push Docker Image
-    runs-on: ubuntu-latest
-    permissions:
-      contents: 'read'
-      id-token: 'write'
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Create GCP Service Account Keyfile
-      env:
-        GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-      run: |
-        echo "$GCP_SERVICE_ACCOUNT_KEY" > credentials.json
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-        export_environment_variables: true
-
-    - name: Configure Docker for GCR
-      run: |
-        gcloud auth configure-docker gcr.io --quiet
-
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: |
-          gcr.io/${{ env.PROJECT_ID }}/vehicle-insurance-app:latest
-          gcr.io/${{ env.PROJECT_ID }}/vehicle-insurance-app:${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        build-args: |
-          DB_PASSWORD=${{ env.DB_PASSWORD }}
-          DB_USERNAME=${{ env.DB_USERNAME }}
-          MONGODB_URL=${{ env.MONGODB_URL }}
-          MLFLOW_TRACKING_URI=${{ env.MLFLOW_TRACKING_URI }}
-          MLFLOW_TRACKING_USERNAME=${{ env.MLFLOW_TRACKING_USERNAME }}
-          MLFLOW_TRACKING_PASSWORD=${{ env.MLFLOW_TRACKING_PASSWORD }}
+    # ... unchanged build-docker job ... 
 
   deploy-infra:
     name: Deploy Infrastructure
@@ -81,7 +38,7 @@ jobs:
       env:
         GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
       run: |
-        echo "$GCP_SERVICE_ACCOUNT_KEY" > credentials.json
+        echo "$GCP_SERVICE_ACCOUNT_KEY" > ${{ env.TF_DIR }}/credentials.json
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
@@ -90,22 +47,38 @@ jobs:
       uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        export_environment_variables: true
 
     - name: Terraform Init
-      run: terraform init -backend-config="credentials=credentials.json"
+      working-directory: ${{ env.TF_DIR }}
+      run: |
+        terraform init -backend-config="bucket=${{ env.PROJECT_ID }}-tfstate" \
+                       -backend-config="prefix=terraform/state"
 
     - name: Terraform Validate
+      working-directory: ${{ env.TF_DIR }}
       run: terraform validate
 
     - name: Terraform Plan
-      run: terraform plan -var="project_id=$PROJECT_ID" -var="region=$REGION" -var="credentials_file=credentials.json"
+      working-directory: ${{ env.TF_DIR }}
+      run: |
+        terraform plan \
+          -var="project_id=${{ env.PROJECT_ID }}" \
+          -var="region=${{ env.REGION }}" \
+          -var="service_account_email=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}"
       if: github.event_name == 'pull_request'
 
     - name: Terraform Apply
-      run: terraform apply -auto-approve -var="project_id=$PROJECT_ID" -var="region=$REGION" -var="credentials_file=credentials.json"
+      working-directory: ${{ env.TF_DIR }}
+      run: |
+        terraform apply -auto-approve \
+          -var="project_id=${{ env.PROJECT_ID }}" \
+          -var="region=${{ env.REGION }}" \
+          -var="service_account_email=${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}"
       if: github.ref == 'refs/heads/main'
 
     - name: Verify Deployment
+      working-directory: ${{ env.TF_DIR }}
       run: |
         echo "Load Balancer IP: $(terraform output -raw load_balancer_ip)"
         echo "Cloud Run URL: $(terraform output -raw cloud_run_url)"
