@@ -1,5 +1,3 @@
-deploy.yaml->GCP
-
 name: Deploy to GCP
 
 on:
